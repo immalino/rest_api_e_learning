@@ -1,0 +1,33 @@
+{
+    "message": "Success",
+    "sebelumMapping": [
+        {
+            "id": 1,
+            "name": "SubBab 1.1",
+            "label_gratis": true,
+            "total_completed": "2",
+            "total_materials": 6
+        },
+        {
+            "id": 2,
+            "name": "SubBab 1.2",
+            "label_gratis": false,
+            "total_completed": null,
+            "total_materials": 6
+        }
+    ],
+    "setelahMapping": [
+        {
+            "id": 1,
+            "name": "SubBab 1.1",
+            "label_gratis": true,
+            "progress": null
+        },
+        {
+            "id": 2,
+            "name": "SubBab 1.2",
+            "label_gratis": false,
+            "progress": null
+        }
+    ]
+}

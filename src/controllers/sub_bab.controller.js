@@ -73,7 +73,8 @@ const index = async (req, res, next) => {
 
   return res.send({
     message: "Success",
-    data: data,
+    sebelumMapping: sub_bab,
+    setelahMapping: data,
   });
 };
 
