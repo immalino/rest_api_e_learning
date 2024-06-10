@@ -15,7 +15,6 @@ const register = async (req, res, next) => {
   await UserModel.create({
     name,
     email,
-    shipping_address,
     password: passwordHash,
   })
     .then((user) => {

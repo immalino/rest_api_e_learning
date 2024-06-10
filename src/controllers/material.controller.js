@@ -11,7 +11,6 @@ const {
  */
 const index = async (req, res, next) => {
   let { id_sub_bab } = req.query;
-  console.log(req.user.id);
 
   const material = await MaterialModel.findAll({
     attributes: [
@@ -22,7 +21,7 @@ const index = async (req, res, next) => {
       "gold",
       [
         MaterialModel.sequelize.literal(
-          `CASE WHEN userProgress.selesai IS NOT NULL THEN 'Selesai' ELSE 'Belum Selesai' END`
+          `CASE WHEN userProgress.selesai IS NOT NULL AND userProgress.selesai = 1 THEN 'Selesai' ELSE 'Belum Selesai' END`
         ),
         "status",
       ],
@@ -32,23 +31,13 @@ const index = async (req, res, next) => {
         model: UserProgressModel,
         as: "userProgress",
         attributes: [],
-        required: false, // LEFT JOIN
-        where: { user_id: req.user.id }, // Specify the user_id here
+        required: false,
+        where: { user_id: req.user.id },
       },
     ],
     where: {
-      sub_bab_id: id_sub_bab, // Specify the sub_bab_id here
+      sub_bab_id: id_sub_bab,
     },
-  });
-
-  // console.log("material", material);
-
-  const data = material.map((m) => {
-    return {
-      id: m.id,
-      name: m.name,
-      // selesai: m.userProgress.selesai,
-    };
   });
 
   return res.send({

@@ -15,23 +15,60 @@ const index = async (req, res, next) => {
   let { id_mata_pelajaran: id_mapel } = req.query;
 
   const bab = await BabModel.findAll({
-    attributes: ["id", "name"],
+    attributes: [
+      "id",
+      "name",
+      [
+        BabModel.sequelize.fn(
+          "COUNT",
+          BabModel.sequelize.fn("DISTINCT", BabModel.sequelize.col("subBab.id"))
+        ),
+        "total_sub_bab",
+      ],
+      [
+        BabModel.sequelize.fn(
+          "SUM",
+          BabModel.sequelize.fn(
+            "DISTINCT",
+            BabModel.sequelize.col("subBab.label_gratis")
+          )
+        ),
+        "total_sub_bab_gratis",
+      ],
+      [
+        BabModel.sequelize.fn(
+          "SUM",
+          BabModel.sequelize.col("subBab.material.userProgress.selesai")
+        ),
+        "total_completed",
+      ],
+      [
+        BabModel.sequelize.fn(
+          "COUNT",
+          BabModel.sequelize.col("subBab.material.id")
+        ),
+        "total_materials",
+      ],
+    ],
     include: [
       {
-        association: "subBab",
+        model: SubBabModel,
+        as: "subBab",
+        attributes: [],
         required: true,
-        attributes: ["id", "name", "label_gratis"],
         include: [
           {
-            association: "material",
-            attributes: ["id", "name"],
+            model: MaterialModel,
+            as: "material",
+            attributes: [],
+            required: true,
             include: [
               {
-                association: "userProgress",
-                attributes: ["user_id", "material_id", "selesai"],
-                where: {
-                  user_id: req.user.id,
-                },
+                model: UserProgressModel,
+                as: "userProgress",
+                attributes: [],
+                required: false,
+                where: { user_id: req.user.id },
               },
             ],
           },
@@ -41,36 +78,21 @@ const index = async (req, res, next) => {
     where: {
       mata_pelajaran_id: id_mapel,
     },
+    group: ["bab.id"],
   });
 
   // console.log(bab);
 
-  const data = bab.map((bab) => {
-    const freeSubBabCount = bab.subBab.filter(
-      (subBab) => subBab.label_gratis
-    ).length;
-
-    let completedMaterialCount = 0;
-    let totalMaterialCount = 0;
-    bab.subBab.forEach((subBab) => {
-      subBab.material.forEach((material) => {
-        totalMaterialCount++;
-        if (material.selesai) {
-          completedMaterialCount++;
-        }
-      });
-    });
-    const progress =
-      totalMaterialCount > 0 ? completedMaterialCount / totalMaterialCount : 0;
-
-    return {
-      id: bab.id,
-      name: bab.name,
-      freeSubBabCount: freeSubBabCount,
-      progress: progress,
-      test: bab.subBab.material,
-    };
-  });
+  const data = bab.map((bab) => ({
+    id: bab.id,
+    name: bab.name,
+    total_sub_bab: bab.get("total_sub_bab"),
+    total_sub_bab_gratis: bab.get("total_sub_bab_gratis"),
+    progress: (
+      parseInt(bab.get("total_completed")) / bab.get("total_materials") ||
+      0
+    ).toFixed(1),
+  }));
 
   return res.send({
     message: "Success",

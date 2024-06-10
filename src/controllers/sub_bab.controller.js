@@ -12,7 +12,6 @@ const {
  */
 const index = async (req, res, next) => {
   let { id_bab } = req.query;
-  console.log(req.user.id);
 
   const sub_bab = await SubBabModel.findAll({
     attributes: [
@@ -46,7 +45,7 @@ const index = async (req, res, next) => {
             as: "userProgress",
             attributes: [],
             required: false, // LEFT JOIN
-            where: { user_id: req.user.id }, // Specify the user_id here
+            where: { user_id: req.user.id },
           },
         ],
       },
@@ -63,18 +62,15 @@ const index = async (req, res, next) => {
     id: subBab.id,
     name: subBab.name,
     label_gratis: subBab.label_gratis,
-    total_completed: subBab.total_completed,
-    total_materials: subBab.total_materials,
-    progress:
-      subBab.total_materials === 0
-        ? 0
-        : subBab.total_completed / subBab.total_materials,
+    progress: (
+      parseInt(subBab.get("total_completed")) / subBab.get("total_materials") ||
+      0
+    ).toFixed(1),
   }));
 
   return res.send({
     message: "Success",
-    sebelumMapping: sub_bab,
-    setelahMapping: data,
+    data,
   });
 };
 
